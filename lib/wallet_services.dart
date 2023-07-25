@@ -14,7 +14,7 @@ import 'package:realm/realm.dart';
 
 class WalletServices extends ChangeNotifier {
   String rpcUrl =
-      "https://sepolia.infura.io/v3/796bf991d055491fb1b8891ef8cb1710";
+      "https://sepolia.infura.io/v3/844637b56a734bffbc0a4de188263c47";
   var priateKeyHex = '';
   double balance = 0.00;
 
@@ -22,6 +22,8 @@ class WalletServices extends ChangeNotifier {
   // Transect? list;
 
   MyCredentials? myCredentials;
+
+  bool isInitialized = false;
 
   Future<void> createWallet(User user) async {
     var rng = Random.secure();
@@ -60,32 +62,36 @@ class WalletServices extends ChangeNotifier {
     notifyListeners();
   }
 
-  // void intialize(User user) {
-  //   final configLocal = Configuration.local([MyCredentials.schema],
-  //       fifoFilesFallbackPath: "./wallet");
-  //   localRealm = Realm(configLocal);
+  // void intialize(User? user) {
+  //   if (user != null) {
+  //     final configLocal = Configuration.local([MyCredentials.schema],
+  //         fifoFilesFallbackPath: "./wallet");
+  //     localRealm = Realm(configLocal);
 
-  //   myCredentials =
-  //       localRealm.find<MyCredentials>(ObjectId.fromHexString(user.id));
-  //   print(myCredentials!.address);
-  //   if (myCredentials != null) {
-  //     getBalance(myCredentials!);
+  //     myCredentials =
+  //         localRealm.find<MyCredentials>(ObjectId.fromHexString(user.id));
+  //     print(myCredentials?.address);
+  //     if (myCredentials != null) {
+  //       getBalance(myCredentials!);
+  //     }
+  //     notifyListeners();
   //   }
-  //   notifyListeners();
   // }
 
   void intialize(User? user) {
-    if (user != null) {
+    if (!isInitialized && user != null) {
       final configLocal = Configuration.local([MyCredentials.schema],
           fifoFilesFallbackPath: "./wallet");
       localRealm = Realm(configLocal);
 
       myCredentials =
           localRealm.find<MyCredentials>(ObjectId.fromHexString(user.id));
-      print(myCredentials?.address);
+      print(myCredentials!.address);
       if (myCredentials != null) {
         getBalance(myCredentials!);
       }
+
+      isInitialized = true; // Mark as initialized
       notifyListeners();
     }
   }
@@ -100,7 +106,7 @@ class WalletServices extends ChangeNotifier {
     return balance;
   }
 
-  void sendTransection(
+  Future<bool> sendTransection(
       String toAdress, String value, MyCredentials data) async {
     final client = web3.Web3Client(rpcUrl, Client());
 
@@ -123,6 +129,7 @@ class WalletServices extends ChangeNotifier {
     // getTransections();
 
     await client.dispose();
+    return true;
   }
 
 //   void getTransections() async {

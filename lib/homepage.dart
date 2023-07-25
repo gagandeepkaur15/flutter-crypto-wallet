@@ -17,7 +17,7 @@ class _HomePageState extends State<HomePage> {
   TextEditingController _amount = TextEditingController();
 
   late LoginRealm loginProvider;
-  // double _balance = 0.00;
+  double _balance = 0.00;
 
   @override
   void initState() {
@@ -29,15 +29,18 @@ class _HomePageState extends State<HomePage> {
     if (currentUser != null) {
       walletProvider.intialize(currentUser);
     }
-    // _fetchBalance(walletProvider);
+    _fetchBalance(walletProvider);
   }
 
-  // void _fetchBalance(WalletServices walletProvider) async {
-  //   double balance = await walletProvider.getBalance();
-  //   setState(() {
-  //     _balance = balance;
-  //   });
-  // }
+  void _fetchBalance(WalletServices walletProvider) async {
+    if (walletProvider.myCredentials != null) {
+      double balance =
+          await walletProvider.getBalance(walletProvider.myCredentials!);
+      setState(() {
+        _balance = balance;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,8 +57,8 @@ class _HomePageState extends State<HomePage> {
             'Amount',
             style: TextStyle(fontSize: 30),
           ),
-          const Text(
-            '0.00',
+          Text(
+            '$_balance', // Display the wallet balance here
             style: TextStyle(fontSize: 30),
           ),
           OutlinedButton(
@@ -125,6 +128,28 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
+                ElevatedButton(
+                    onPressed: () {
+                      final walletProvider =
+                          Provider.of<WalletServices>(context, listen: false);
+                      String toAddress = _address.text;
+                      String amount = _amount.text;
+
+                      walletProvider.sendTransection(
+                          toAddress, amount, walletProvider.myCredentials!);
+
+                      walletProvider
+                          .sendTransection(
+                              toAddress, amount, walletProvider.myCredentials!)
+                          .then((value) {
+                        print(value);
+                      }).catchError((error) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text("Error sending transaction: $error"),
+                        ));
+                      });
+                    },
+                    child: const Text("Send"))
               ],
             ),
           ),
