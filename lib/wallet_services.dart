@@ -1,25 +1,31 @@
 // ignore_for_file: avoid_print
 
 // import 'dart:convert';
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_wallet/transaction_model.dart';
 // import 'package:wallet_flutter/TransectionModal.dart';
 import 'realm_model.dart';
 import 'package:web3dart/crypto.dart';
 import 'package:http/http.dart';
 import 'package:web3dart/web3dart.dart' as web3;
 import 'package:realm/realm.dart';
+import 'keys.dart';
 // import 'package:ethereum/ethereum.dart' as eth;
 // import 'package:web3dart/web3dart.dart';
 
 class WalletServices extends ChangeNotifier {
-  String rpcUrl =
-      "https://sepolia.infura.io/v3/844637b56a734bffbc0a4de188263c47";
+  String rpcUrl = Keys.rpcURL;
   var priateKeyHex = '';
-  double balance = 0.00;
+  // double balance = 0.00;
+  double _balance = 0.00;
+
+  // Getter for balance
+  double get balance => _balance;
 
   late final Realm localRealm;
-  // Transect? list;
+  Transactions? list;
 
   MyCredentials? myCredentials;
 
@@ -91,6 +97,8 @@ class WalletServices extends ChangeNotifier {
         getBalance(myCredentials!);
       }
 
+      // getCredentials(user.id);
+
       isInitialized = true; // Mark as initialized
       notifyListeners();
     }
@@ -101,7 +109,7 @@ class WalletServices extends ChangeNotifier {
     final credentials = web3.EthPrivateKey.fromHex(myCredentials.publicKeyHex);
     final address = credentials.address;
     final val = await client.getBalance(address);
-    balance = val.getInWei / BigInt.from(1000000000000000000);
+    double balance = val.getInWei / BigInt.from(1000000000000000000);
     notifyListeners();
     return balance;
   }
@@ -118,46 +126,55 @@ class WalletServices extends ChangeNotifier {
     print(credentials.privateKey);
     print(await client.getGasPrice());
     print(await client.getBalance(address));
+
     var transaction = web3.Transaction(
         to: web3.EthereumAddress.fromHex(toAdress),
         value: web3.EtherAmount.fromBigInt(web3.EtherUnit.wei, amo));
     final supply = await client.signTransaction(credentials, transaction,
         chainId: 11155111);
     final result = await client.sendRawTransaction(supply);
+
+    //UPDATE BALANCE
+    double newbalance = await getBalance(data);
+    _balance = newbalance;
+
+    notifyListeners();
+
     print(result);
     print(await client.getTransactionCount(address));
-    // getTransections();
+    getTransactions();
 
     await client.dispose();
     return true;
   }
 
-//   void getTransections() async {
-//     final apiKey =
-//         'gPCxLm20LkAW6t0bxTOYvPFlVsoPm9hcrJf26rf7EOgyrYL832DMgiO96Qvb7vqz';
-//     final url =
-//         'https://deep-index.moralis.io/api/v2/${myCredentials!.address}/verbose?chain=sepolia';
+  void getTransactions() async {
+    const apiKey =
+        Keys.apiKey;
+    final url =
+        'https://deep-index.moralis.io/api/v2/${myCredentials!.address}/verbose?chain=sepolia';
 
-//     try {
-//       // Send the HTTP GET request with the required headers
-//       final response = await get(
-//         Uri.parse(url),
-//         headers: {
-//           'accept': 'application/json',
-//           'X-API-Key': apiKey,
-//         },
-//       );
+    try {
+      // Send the HTTP GET request with the required headers
+      final response = await get(
+        Uri.parse(url),
+        headers: {
+          'accept': 'application/json',
+          'X-API-Key': apiKey,
+        },
+      );
 
-//       if (response.statusCode == 200) {
-//         // Parse the JSON response
-//         print('Response: ${response.body}');
-//         list = Transect.fromJson(json.decode(response.body));
-//         print(list!.result!.length);
-//       } else {
-//         print('Request failed with status code: ${response.statusCode}');
-//       }
-//     } catch (e) {
-//       print('Error sending request: $e');
-//     }
-//   }
+      if (response.statusCode == 200) {
+        // Parse the JSON response
+        print('Response: ${response.body}');
+        list = Transactions.fromJson(json.decode(response.body));
+        notifyListeners();
+        print(list!.result!.length);
+      } else {
+        print('Request failed with status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error sending request: $e');
+    }
+  }
 }

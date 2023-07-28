@@ -31,6 +31,10 @@ class LoginRealm with ChangeNotifier {
     }
   }
 
+  Future<void> anonRegister() async {
+    user = await app.logIn(Credentials.anonymous());
+  }
+
   Future logout() async {
     try {
       await user!.logOut();
