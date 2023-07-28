@@ -21,9 +21,35 @@ class _QRGenerateState extends State<QRGenerate> {
           children: <Widget>[
             TextField(
               controller: _cont,
-              decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.all(10),
-                  hintText: "Enter the address"),
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: const BorderSide(
+                    width: 1,
+                    color: Color.fromARGB(225, 248, 86, 88),
+                  ),
+                ),
+                labelText: 'Enter address',
+                labelStyle:
+                    const TextStyle(color: Color.fromARGB(151, 255, 255, 255)),
+                // isDense: true,
+                contentPadding: const EdgeInsets.all(8),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: const BorderSide(
+                    width: 1,
+                    color: Color.fromARGB(225, 248, 86, 88),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: const BorderSide(
+                    width: 1,
+                    color: Color.fromARGB(225, 248, 86, 88),
+                  ),
+                ),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -31,13 +57,21 @@ class _QRGenerateState extends State<QRGenerate> {
                   data = _cont.text;
                 });
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromARGB(225, 248, 86, 88),
+              ),
               child: const Text('Generate QR'),
             ),
-            Center(
-              child: QrImage(
-                data: data,
-                version: QrVersions.auto,
-                size: 200,
+            Container(
+              height: 220,
+              width: 220,
+              color: Colors.white,
+              child: Center(
+                child: QrImage(
+                  data: data,
+                  version: QrVersions.auto,
+                  size: 200,
+                ),
               ),
             ),
           ],
