@@ -53,6 +53,16 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _refreshData() async {
+    final walletProvider = context.read<WalletServices>();
+    double balance =
+        await walletProvider.getBalance(walletProvider.myCredentials!);
+
+    setState(() {
+      _balance = balance;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // final walletProvider = Provider.of<WalletServices>(context);
@@ -69,121 +79,129 @@ class _HomePageState extends State<HomePage> {
           automaticallyImplyLeading: false,
           backgroundColor: const Color.fromARGB(225, 248, 86, 88),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                const SizedBox(
-                  height: 20,
-                ),
-                GestureDetector(
-                  onTap: () async {
-                    await Clipboard.setData(ClipboardData(
-                        text:
-                            walletProvider.myCredentials!.address.toString()));
-                  },
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Address',
-                        style: TextStyle(fontSize: 15, color: Colors.white),
-                      ),
-                      Icon(
-                        Icons.copy,
-                        size: 15,
-                        color: Colors.white,
-                      )
-                    ],
+        body: RefreshIndicator(
+          onRefresh: _refreshData,
+          color: const Color.fromARGB(225, 248, 86, 88),
+          child: Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const SizedBox(
+                    height: 20,
                   ),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                Text(
-                  walletProvider.myCredentials!.address,
-                  style: const TextStyle(fontSize: 12, color: Colors.white),
-                ),
-                const SizedBox(
-                  height: 50,
-                ),
-                walletProvider.myCredentials!.address == ''
-                    ? OutlinedButton(
-                        onPressed: () async {
-                          await loginProvider.getCurrentUser();
-                          User? currentUser = loginProvider.currentUser;
-                          if (currentUser != null) {
-                            walletProvider.createWallet(currentUser).then(
-                                  (value) => print(
-                                      ":::::::::::::::::::::::::::::::::::::::::::::::Wallet created"),
-                                );
-                          }
+                  GestureDetector(
+                    onTap: () async {
+                      await Clipboard.setData(ClipboardData(
+                          text: walletProvider.myCredentials!.address
+                              .toString()));
+                    },
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Address',
+                          style: TextStyle(fontSize: 15, color: Colors.white),
+                        ),
+                        Icon(
+                          Icons.copy,
+                          size: 15,
+                          color: Colors.white,
+                        )
+                      ],
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Text(
+                    walletProvider.myCredentials!.address.substring(0, 15) +
+                        '...',
+                    style: const TextStyle(fontSize: 12, color: Colors.white),
+                  ),
+                  const SizedBox(
+                    height: 50,
+                  ),
+                  walletProvider.myCredentials!.address == ''
+                      ? OutlinedButton(
+                          onPressed: () async {
+                            await loginProvider.getCurrentUser();
+                            User? currentUser = loginProvider.currentUser;
+                            if (currentUser != null) {
+                              walletProvider.createWallet(currentUser).then(
+                                    (value) => print(
+                                        ":::::::::::::::::::::::::::::::::::::::::::::::Wallet created"),
+                                  );
+                            }
+                          },
+                          child: const Text("Create Wallet"))
+                      : Column(
+                          children: [
+                            const Text(
+                              'Amount',
+                              style:
+                                  TextStyle(fontSize: 25, color: Colors.white),
+                            ),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            Text(
+                              '$_balance',
+                              // balance == 0.00 ? "0.00" : balance.toString().substring(0, 5),
+                              style: const TextStyle(
+                                  fontSize: 20, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                  const SizedBox(
+                    height: 50,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          sendBottomSheet(context);
                         },
-                        child: const Text("Create Wallet"))
-                    : Column(
-                        children: [
-                          const Text(
-                            'Amount',
-                            style: TextStyle(fontSize: 25, color: Colors.white),
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Text(
-                            '$_balance',
-                            // balance == 0.00 ? "0.00" : balance.toString().substring(0, 5),
-                            style: const TextStyle(
-                                fontSize: 20, color: Colors.white),
-                          ),
-                        ],
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color.fromARGB(225, 248, 86, 88),
+                        ),
+                        child: const Text('Send'),
                       ),
-                const SizedBox(
-                  height: 50,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        sendBottomSheet(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(225, 248, 86, 88),
+                      ElevatedButton(
+                        onPressed: () {
+                          receiveBottomSheet(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color.fromARGB(225, 248, 86, 88),
+                        ),
+                        child: const Text('Receive'),
                       ),
-                      child: const Text('Send'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        receiveBottomSheet(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(225, 248, 86, 88),
-                      ),
-                      child: const Text('Receive'),
-                    ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 50,
-                ),
-                SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      if (listTransaction == null) ...[
-                        const Text("Null"),
-                      ] else if (listTransaction.result!.isEmpty) ...[
-                        const Text('No transections to show')
-                      ] else
-                        ...listTransaction.result!.map((element) {
-                          return TList(data: element, address: cred!.address);
-                        }).toList()
                     ],
                   ),
-                )
-              ],
+                  const SizedBox(
+                    height: 50,
+                  ),
+                  SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        if (listTransaction == null) ...[
+                          const Text("Null"),
+                        ] else if (listTransaction.result!.isEmpty) ...[
+                          const Text('No transections to show')
+                        ] else
+                          ...listTransaction.result!.map((element) {
+                            return TList(data: element, address: cred!.address);
+                          }).toList()
+                      ],
+                    ),
+                  )
+                ],
+              ),
             ),
           ),
         ),
@@ -198,7 +216,7 @@ class _HomePageState extends State<HomePage> {
       isScrollControlled: true,
       builder: (BuildContext context) {
         return SizedBox(
-          height: 800,
+          height: 700,
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

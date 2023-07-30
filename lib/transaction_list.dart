@@ -32,8 +32,14 @@ class TList extends StatelessWidget {
               ),
             ),
             data.toAddress != address
-                ? Icon(Icons.arrow_upward)
-                : Icon(Icons.arrow_downward),
+                ? const Icon(
+                    Icons.arrow_upward,
+                    color: Colors.blue,
+                  )
+                : const Icon(
+                    Icons.arrow_downward,
+                    color: Colors.green,
+                  ),
           ],
         ),
       ),
